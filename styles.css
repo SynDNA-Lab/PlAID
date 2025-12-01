@@ -9,82 +9,135 @@ body {
   line-height: 1.5;
   color: #333;
   /* background-color: #f5f5f5; */
-  background-color:  #999;
+  background-color: #999;
 }
 
 header {
-    background-color: #2c3e50;
-    color: white;
-    padding: 1rem;
-    text-align: center;
+  background-color: #2c3e50;
+  color: white;
+  padding: 1rem;
+  text-align: center;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+main.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* horizontally centers everything inside main */
+  width: 100%;
+  max-width: 1400px; /* prevents plates from going off screen */
+  margin: 0 auto; /* centers the whole block on the page */
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.plate-titles {
+  width: 70%;
+  max-width: 1000px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0 0.5rem 0;
+  height: 0px;
+}
+
+.plate-title h2 {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  color: #2c3e50;
+  font-size: 1.4rem;
+  white-space: nowrap;
 }
 
 .file-input-container {
-    margin: 1rem 0;
+  margin: 1rem 0;
 }
 
 .file-input-container input[type="file"] {
-    display: none;
+  display: none;
 }
 
 .file-input-container label {
-    background-color: #3498db;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    display: inline-block;
+  background-color: #3498db;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-block;
 }
 
 .file-input-container label:hover {
-    background-color: #2980b9;
+  background-color: #2980b9;
 }
 
 .plates-container {
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 7rem;
+
+  width: 100%;
+  margin-bottom: 0.25rem;
+  margin-top: 0.25rem;
+  position: relative;
+  height: 300px;
+}
+
+.lower-sections {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.info-section,
+.protocol-table {
+  width: 100%;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .plate-section {
-    flex: 1;
-    min-width: 500px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  width: 600px; /* fixed layout width */
+  height: 300px; /* fixed height for absolute plate */
+  position: relative;
+  flex-shrink: 0; /* prevents shrinking => prevents overlap */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .plate-section h2 {
-    margin-bottom: 1rem;
-    display: flex;
-    color: #2c3e50;
+  margin-bottom: 1rem;
+  display: flex;
+  color: #2c3e50;
 }
 
 .plate {
-    background: black;
-    /* background: white; */
-    /* border: 2px solid #ccc; */
-    border: 2px solid white;
-  border-radius: 8px;
-  padding: 1rem;
-  transform-origin: top center;
-  transition: transform 0.3s ease;
+  border: 2px solid white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(1);
+
+  /* new: prevents layout shift while scaling */
+  will-change: transform;
+  pointer-events: none;
+  background-color: black;
 }
 
-.plate-header, .plate-row {
+.plate-header,
+.plate-row {
   display: flex;
   gap: 4px;
   margin-bottom: 4px;
 }
 
-.col-header, .row-header {
+.col-header,
+.row-header {
   width: 24px;
   height: 24px;
   display: flex;
@@ -115,23 +168,29 @@ header {
 }
 
 .well.highlighted {
-    //background: #3498db;
-    //border-color: #2980b9;
-    background: yellow;
-    border-color: gold;
-    animation: pulse 1s infinite;
+  /* background: #3498db;
+    border-color: #2980b9; */
+  background: yellow;
+  border-color: gold;
+  animation: pulse 1s infinite;
 }
 
 .well.highlighted .well-label {
-   // color: white;
-    color: black;
+  /* // color: white; */
+  color: black;
   font-weight: bold;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .info-section {
@@ -139,7 +198,7 @@ header {
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .info-box {
@@ -155,7 +214,7 @@ header {
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 0rem;
 }
 
 button {
@@ -180,13 +239,13 @@ button:not(:disabled):hover {
   background: white;
   border-radius: 8px;
   padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .table-container {
-    /* overflow-x: auto; */
-    overflow: auto;
-    height: 300px;
+  /* overflow-x: auto; */
+  overflow: auto;
+  height: 300px;
 }
 
 table {
@@ -195,7 +254,8 @@ table {
   margin-top: 1rem;
 }
 
-th, td {
+th,
+td {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #dee2e6;
@@ -217,7 +277,7 @@ tr.current-step {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   justify-content: center;
   align-items: center;
 }
