@@ -67,9 +67,9 @@ document.addEventListener("keydown", (e) => {
 });
 
 function updatePlateScales() {
-  sourcePlate.style.transform = `translate(-50%, -50%) scale(${plateScale})`;
+  // sourcePlate.style.transform = `translate(-50%, -50%) scale(${plateScale})`;
 
-  targetPlate.style.transform = `translate(-50%, -50%) scale(${plateScale})`;
+  // targetPlate.style.transform = `translate(-50%, -50%) scale(${plateScale})`;
 
   updateContainerHeight();
 }
