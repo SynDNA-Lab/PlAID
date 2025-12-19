@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <title>PlAID</title>
@@ -18,35 +18,21 @@
 
     <main class="container">
       <div class="zoom-slider-container">
-        <h3>Zoom level</h3>
-            <div class="zoom">
-              <button id="plusZoom" disabled>Enlarge (+)</button>
-              <span id="zoomCounter">100 %</span>
-              <button id="minusZoom" disabled>Decrease (-)</button>
-            </div>
-      </div>
-      <div class="plate-titles">
-        <div class="plate-title">
-          <h2 id="sourcePlateHeading">Source Plate: <span id="sourcePlateName">-</span>
-          </h2>
+        <h3 id="zoom_title">Zoom level</h3>
+        <div class="zoom">
+          <button id="minusZoom">Decrease (-)</button>
+          <span id="zoomCounter">100 %</span>
+          <button id="plusZoom">Enlarge (+)</button>
         </div>
+      </div>
 
-        <div class="plate-title">
-          <h2 id="targetPlateHeading">Target Plate: <span id="targetPlateName">-</span>
-          </h2>
-        </div>
-      </div>
       <div class="plates-container">
-        <div class="plate-section">
-          <div class="plate-container">
-            <div id="sourcePlate" class="plate"></div>
-          </div>
+        <div class="plate-container">
+          <div id="sourcePlate" class="plate"></div>
         </div>
 
-        <div class="plate-section">
-          <div class="plate-container">
-            <div id="targetPlate" class="plate"></div>
-          </div>
+        <div class="plate-container">
+          <div id="targetPlate" class="plate"></div>
         </div>
       </div>
 

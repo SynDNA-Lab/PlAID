@@ -7,9 +7,6 @@ let plateScale = 1.0; // Scale factor for plate size
 const fileInput = document.getElementById("csvFile");
 const sourcePlate = document.getElementById("sourcePlate");
 const targetPlate = document.getElementById("targetPlate");
-const targetPlateHeading = document.getElementById("targetPlateHeading");
-const sourcePlateName = document.getElementById("sourcePlateName");
-const targetPlateName = document.getElementById("targetPlateName");
 const infoSection = document.getElementsByClassName("info-section")[0];
 const stepInfo = document.getElementById("stepInfo");
 const prevStepBtn = document.getElementById("prevStep");
@@ -20,6 +17,10 @@ const tableContainer = document.getElementsByClassName("table-container")[0];
 const plateChangeModal = document.getElementById("plateChangeModal");
 const plateChangeMessage = document.getElementById("plateChangeMessage");
 const confirmPlateChangeBtn = document.getElementById("confirmPlateChange");
+const plusZoomBtn = document.getElementById("plusZoom");
+const minusZoomBtn = document.getElementById("minusZoom");
+
+let lastLayoutMode = "horizontal";
 
 // Event Listeners
 fileInput.addEventListener("change", handleFileUpload);
@@ -27,62 +28,194 @@ prevStepBtn.addEventListener("click", () => navigateStep(-1));
 nextStepBtn.addEventListener("click", () => navigateStep(1));
 confirmPlateChangeBtn.addEventListener("click", confirmPlateChange);
 
+//--------------------------------------EVENT--------------------------------------
 document.addEventListener("keydown", (e) => {
   // compute limit once per keypress
   const limit = computeScaleLimit();
 
   if (e.key === "+" || e.key === "=") {
-    plateScale = Math.min(plateScale + 0.02, limit);
+    plateScale = Math.min(plateScale + 0.02, 2);
     updatePlateScales();
+    updateZoomCounter();
   } else if (e.key === "-") {
-    plateScale = Math.max(plateScale - 0.02, 0.3);
+    const min = computeMinScale();
+    plateScale = Math.max(plateScale - 0.02, min);
     updatePlateScales();
+    updateZoomCounter();
   }
 });
+//-------------------------------------------Button control-------------------------------
+function updateZoomCounter() {
+  document.getElementById("zoomCounter").textContent =
+    `${Math.round(plateScale * 100)} %`;
+}
+
+plusZoomBtn.addEventListener("click", () => {
+  const limit = computeScaleLimit();
+  plateScale = Math.min(plateScale + 0.02, 2);
+  updatePlateScales();
+  updateZoomCounter();
+});
+
+minusZoomBtn.addEventListener("click", () => {
+  const min = computeMinScale();
+  plateScale = Math.max(plateScale - 0.02, min);
+  updatePlateScales();
+  updateZoomCounter();
+});
+//---------------------------------Modify layout from vertical to horizontal--------------
+window.addEventListener("resize", updatePlateLayoutMode);
+
+//---------------------------------------Compute scale-----------------------------------
+function computeMinScale() {
+  const containerWidth =
+    document.querySelector(".plates-container").clientWidth;
+
+  const sWidth = sourcePlate.offsetWidth;
+  const tWidth = targetPlate.offsetWidth;
+
+  const needed = sWidth + tWidth + 30; // gap
+
+  return Math.min(1, containerWidth / needed);
+}
 
 function computeScaleLimit() {
   const container = document.querySelector(".plates-container");
+  const plate1 = getUnscaledSize(sourcePlate);
+  const plate2 = getUnscaledSize(targetPlate);
 
-  const containerWidth = container.clientWidth;
-  const containerHeight = container.clientHeight;
+  const availableWidth = container.clientWidth;
 
-  const plateWidth = sourcePlate.offsetWidth;
-  const plateHeight = sourcePlate.offsetHeight;
+  const availableHeight = window.innerHeight * 0.9;
 
-  const maxX = containerWidth / (plateWidth * 2 + 100);
-  const maxY = containerHeight / plateHeight;
+  if (container.classList.contains("vertical")) {
+    const gap = 20;
 
-  return Math.min(maxX, maxY);
-}
+    const scaleX = availableWidth / Math.max(plate1.width, plate2.width);
 
-// Add keyboard shortcuts for plate scaling
-document.addEventListener("keydown", (e) => {
-  if (e.key === "+" || e.key === "=") {
-    plateScale = Math.min(plateScale + 0.02, container.clientWidth);
-    updatePlateScales();
-  } else if (e.key === "-") {
-    plateScale = Math.max(plateScale - 0.02, 0.5);
-    updatePlateScales();
+    const scaleY = (availableHeight - gap) / (plate1.height + plate2.height);
+
+    return Math.min(scaleX, 1.5);
+  } else {
+    const gap = 80;
+
+    const scaleX = (availableWidth - gap) / (plate1.width + plate2.width);
+
+    const scaleY = availableHeight / Math.max(plate1.height, plate2.height);
+
+    return Math.min(scaleX, scaleY, 3);
   }
-});
-
-function updatePlateScales() {
-  // sourcePlate.style.transform = `translate(-50%, -50%) scale(${plateScale})`;
-
-  // targetPlate.style.transform = `translate(-50%, -50%) scale(${plateScale})`;
-
-  updateContainerHeight();
 }
 
-function updateContainerHeight() {
+function getUnscaledSize(plate) {
+  const prevTransform = plate.style.transform;
+
+  // Temporarily remove transform
+  plate.style.transform = "none";
+
+  // Force a reflow (important!)
+  const rect = plate.getBoundingClientRect();
+
+  // Restore previous transform
+  plate.style.transform = prevTransform;
+
+  return { width: rect.width, height: rect.height };
+}
+
+function updatePlateLayoutMode() {
+  const container = document.querySelector(".plates-container");
+  const gap = 80;
+
+  const rect1 = sourcePlate.getBoundingClientRect();
+  const rect2 = targetPlate.getBoundingClientRect();
+
+  const totalWidth = rect1.width + rect2.width + gap;
+  const containerWidth = container.clientWidth;
+
+  const shouldBeVertical = totalWidth > containerWidth;
+  const currentMode = container.classList.contains("vertical")
+    ? "vertical"
+    : "horizontal";
+
+  // --- SWITCH MODE ---
+  if (shouldBeVertical && currentMode !== "vertical") {
+    container.classList.add("vertical");
+  } else if (!shouldBeVertical && currentMode !== "horizontal") {
+    container.classList.remove("vertical");
+    container.style.gap = `${gap}px`;
+  }
+
+  const newMode = container.classList.contains("vertical")
+    ? "vertical"
+    : "horizontal";
+
+  if (newMode !== lastLayoutMode) {
+    requestAnimationFrame(() => {
+      if (newMode === "vertical") {
+        updateVerticalLayoutStable();
+      } else {
+        updateHorizontalLayoutStable();
+      }
+    });
+
+    lastLayoutMode = newMode;
+  }
+}
+
+function getRenderedRect(el) {
+  if (!el) return { width: 0, height: 0 };
+  return el.getBoundingClientRect();
+}
+
+function updateVerticalLayoutStable() {
   const container = document.querySelector(".plates-container");
 
-  // Compute the tallest plate height
-  const sourceHeight = sourcePlate.offsetHeight * plateScale;
-  const targetHeight = targetPlate.offsetHeight * plateScale;
-  const maxHeight = Math.max(sourceHeight, targetHeight);
+  const rect1 = sourcePlate.getBoundingClientRect();
+  const rect2 = targetPlate.getBoundingClientRect();
 
-  container.style.height = `${maxHeight + 50}px`; // +50px for some spacing
+  const gap = 10;
+  const totalHeight = (rect1.height + rect2.height) * 1.1 + gap;
+
+  container.style.height = `${Math.ceil(totalHeight)}px`;
+}
+
+const MIN_GAP = 40; // Minimum vertical gap between plates
+
+function updatePlateScales() {
+  const container = document.querySelector(".plates-container");
+
+  sourcePlate.style.transform = `scale(${plateScale})`;
+  targetPlate.style.transform = `scale(${plateScale})`;
+
+  requestAnimationFrame(() => {
+    updatePlateLayoutMode();
+
+    requestAnimationFrame(() => {
+      const max = computeScaleLimit();
+
+      if (container.classList.contains("vertical")) {
+        updateVerticalLayoutStable();
+      } else {
+        updateHorizontalLayoutStable();
+      }
+    });
+  });
+}
+
+function updateHorizontalLayoutStable() {
+  const container = document.querySelector(".plates-container");
+  if (!container) return;
+
+  const rect1 = sourcePlate.getBoundingClientRect();
+  const rect2 = targetPlate.getBoundingClientRect();
+
+  const newHeight = Math.max(rect1.height, rect2.height);
+
+  container.style.height = `${Math.ceil(newHeight)}px`;
+  container.dataset.debugHeight = Math.ceil(newHeight);
+
+  // fixed horizontal gap — no bouncing
+  container.style.gap = "80px";
 }
 
 async function handleFileUpload(event) {
@@ -194,16 +327,21 @@ function showStep(stepIndex) {
   const step = protocol[stepIndex];
   if (!step) return;
 
-  // Update plate names
-  sourcePlateName.textContent = step.source_plate_name;
-  targetPlateName.textContent = step.target_plate_name;
-
   // Clear previous highlights
   clearPlates();
 
   // Create and highlight wells
-  createPlate(sourcePlate, step.source_plate_density);
-  createPlate(targetPlate, step.target_plate_density);
+  createPlate(
+    sourcePlate,
+    step.source_plate_density,
+    `Source Plate: ${step.source_plate_name}`
+  );
+
+  createPlate(
+    targetPlate,
+    step.target_plate_density,
+    `Target Plate: ${step.target_plate_name}`
+  );
 
   highlightWell(
     sourcePlate,
@@ -218,17 +356,28 @@ function showStep(stepIndex) {
     step.target_plate_density
   );
 
-  // Update step information
+  // Correct version: ensures proper sizing
+  requestAnimationFrame(() => {
+    updatePlateLayoutMode(); // first determine vertical/horizontal
+    updatePlateScales(); // apply scale transform
+  });
+
+  // Update step information and navigation
   updateStepInfo(step);
   updateNavigationButtons();
   updateStepCounter();
   highlightCurrentStepInTable();
 }
 
-function createPlate(plateElement, density) {
+function createPlate(plateElement, density, labelText) {
   plateElement.innerHTML = "";
-  plateElement.className = `plate format-${density}`;
 
+  const label = document.createElement("div");
+
+  plateElement.className = `plate format-${density}`;
+  label.className = "plate-label";
+  label.textContent = labelText;
+  plateElement.appendChild(label);
   const rows = density === "384" ? 16 : 8;
   const cols = density === "384" ? 24 : 12;
 
